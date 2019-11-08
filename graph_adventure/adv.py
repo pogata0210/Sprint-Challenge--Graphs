@@ -4,6 +4,20 @@ from world import World
 
 import random
 
+
+class Stack():
+    def __init__(self):
+        self.stack = []
+    def push(self, value):
+        self.stack.append(value)
+    def pop(self):
+        if self.size() > 0:
+            return self.stack.pop()
+        else:
+            return None
+    def size(self):
+        return len(self.stack)
+
 # Load world
 world = World()
 
@@ -19,15 +33,56 @@ world.loadGraph(roomGraph)
 world.printRooms()
 player = Player("Name", world.startingRoom)
 
-
 # FILL THIS IN
-traversalPath = ['n', 's']
-
+traversalPath = []
 
 # TRAVERSAL TEST
+
+# helper function to get reverse of a given direction
+def reverse_dir(dir):
+    if dir == "n":
+        return "s"
+    elif dir == "s":
+        return "n"
+    elif dir == "e":
+        return "w"
+    elif dir == "w":
+        return "e"
+
+
 visited_rooms = set()
 player.currentRoom = world.startingRoom
-visited_rooms.add(player.currentRoom)
+moves = Stack()
+while len(visited_rooms) < len(world.rooms):
+    exits = player.currentRoom.getExits()
+    dirs = []
+    # checks all exits in a room
+    # if the room in the direction of the exit has not been visited
+    # append to dirs
+    for exit in exits:
+        if exit is not None and player.currentRoom.getRoomInDirection(exit) not in visited_rooms:
+            dirs.append(exit)
+    # add room visited set
+    visited_rooms.add(player.currentRoom)
+    # if there are directions to move in
+    # pick a random one available
+    # push that dir onto moves stack
+    # move the player in that direction
+    # append move to traversal path
+    if len(dirs) > 0:
+        rand_dir = random.randint(0, len(dirs) - 1)
+        moves.push(dirs[rand_dir])
+        player.travel(dirs[rand_dir])
+        traversalPath.append(dirs[rand_dir])
+    # if there are no directions to move in
+    # get the last move made
+    # move the player in the reverse direction of last move
+    # append move to traversal path
+    else:
+        last_move = moves.pop()
+        player.travel(reverse_dir(last_move))
+        traversalPath.append(reverse_dir(last_move))
+
 for move in traversalPath:
     player.travel(move)
     visited_rooms.add(player.currentRoom)
@@ -37,7 +92,6 @@ if len(visited_rooms) == len(roomGraph):
 else:
     print("TESTS FAILED: INCOMPLETE TRAVERSAL")
     print(f"{len(roomGraph) - len(visited_rooms)} unvisited rooms")
-
 
 
 #######
